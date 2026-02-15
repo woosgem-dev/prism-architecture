@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prism Architecture — Universal Reference Diagram</title>
+<style>
+  /* ===== Reset & Base ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-card: #1c2128;
+    --border-default: #30363d;
+    --border-muted: #21262d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+
+    /* Domain colors */
+    --orange: #f0883e;
+    --orange-bg: rgba(240, 136, 62, 0.08);
+    --orange-border: rgba(240, 136, 62, 0.35);
+
+    --blue: #58a6ff;
+    --blue-bg: rgba(88, 166, 255, 0.08);
+    --blue-border: rgba(88, 166, 255, 0.35);
+
+    --green: #3fb950;
+    --green-bg: rgba(63, 185, 80, 0.08);
+    --green-border: rgba(63, 185, 80, 0.35);
+
+    --purple: #bc8cff;
+    --purple-bg: rgba(188, 140, 255, 0.08);
+    --purple-border: rgba(188, 140, 255, 0.35);
+
+    --gray: #8b949e;
+    --gray-bg: rgba(139, 148, 158, 0.08);
+    --gray-border: rgba(139, 148, 158, 0.35);
+
+    --accent-cyan: #39d2c0;
+    --accent-pink: #f97583;
+    --red: #f85149;
+    --red-bg: rgba(248, 81, 73, 0.08);
+    --red-border: rgba(248, 81, 73, 0.35);
+  }
+
+  html { font-size: 15px; scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== Subtle Background Pattern ===== */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(188,140,255,0.05), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(88,166,255,0.03), transparent),
+      radial-gradient(ellipse 40% 30% at 10% 80%, rgba(63,185,80,0.03), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== Layout ===== */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* ===== Mono font helper ===== */
+  code, .mono {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+
+  /* ===== Header with Prism Visual ===== */
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-default);
+    position: relative;
+  }
+
+  .prism-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .prism-visual {
+    position: relative;
+    width: 340px;
+    height: 160px;
+  }
+
+  .prism-visual svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--blue), var(--purple), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.4rem;
+  }
+
+  header .tagline {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 640px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  header .tagline em {
+    color: var(--purple);
+    font-style: italic;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.65rem;
+    border-radius: 4px;
+    background: var(--purple-bg);
+    color: var(--purple);
+    border: 1px solid var(--purple-border);
+    margin-top: 0.5rem;
+  }
+
+  /* ===== Section Titles ===== */
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-primary);
+  }
+
+  .section-title .title-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .section-title .title-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border-default);
+    margin-left: 0.5rem;
+  }
+
+  /* ===== Legend ===== */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.25s;
+    user-select: none;
+    border: 1px solid transparent;
+  }
+
+  .legend-item:hover { background: var(--bg-tertiary); border-color: var(--border-default); }
+  .legend-item.active { border-color: currentColor; }
+  .legend-item.dimmed { opacity: 0.2; }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .legend-dot.orange  { background: var(--orange); }
+  .legend-dot.blue    { background: var(--blue); }
+  .legend-dot.green   { background: var(--green); }
+  .legend-dot.purple  { background: var(--purple); }
+  .legend-dot.gray    { background: var(--gray); }
+
+  .legend-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: -0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .legend-hint kbd {
+    display: inline-block;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.68rem;
+    font-family: inherit;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-default);
+    border-radius: 3px;
+    color: var(--text-secondary);
+  }
+
+  /* ===== Main Diagram Grid ===== */
+  .diagram {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1px;
+    background: var(--border-default);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--border-default), 0 8px 40px rgba(0,0,0,0.3);
+  }
+
+  .row {
+    display: grid;
+    background: var(--bg-primary);
+    min-height: 0;
+  }
+
+  .row-top    { grid-template-columns: 1fr; }
+  .row-middle { grid-template-columns: 1fr; }
+  .row-bottom { grid-template-columns: 1fr 1fr; gap: 1px; }
+
+  /* ===== Domain Card ===== */
+  .domain {
+    padding: 1.5rem;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .domain:hover { background: var(--bg-secondary); }
+
+  .domain-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+  }
+
+  .domain-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+
+  .domain-icon.orange  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+  .domain-icon.blue    { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .domain-icon.green   { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .domain-icon.purple  { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+  .domain-icon.gray    { background: var(--gray-bg); color: var(--gray); border: 1px solid var(--gray-border); }
+
+  .domain-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .domain-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-left: auto;
+    padding-left: 0.5rem;
+  }
+
+  .domain-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    margin-left: 0.5rem;
+  }
+
+  .domain-badge.framework {
+    background: var(--orange-bg);
+    color: var(--orange);
+    border: 1px solid var(--orange-border);
+  }
+
+  /* ===== Collapse ===== */
+  .domain-body {
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s;
+    max-height: 1200px;
+    opacity: 1;
+  }
+
+  .domain.collapsed .domain-body {
+    max-height: 0;
+    opacity: 0;
+  }
+
+  .collapse-indicator {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    transition: transform 0.3s;
+    margin-left: 0.4rem;
+  }
+
+  .domain.collapsed .collapse-indicator { transform: rotate(-90deg); }
+
+  /* ===== Internal Packages / Modules ===== */
+  .packages {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .packages.two-col { grid-template-columns: 1fr 1fr; }
+  .packages.three-col { grid-template-columns: 1fr 1fr 1fr; }
+
+  .pkg {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+
+  .pkg:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+
+  .pkg-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .pkg-name .alias {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--accent-cyan);
+    background: rgba(57,210,192,0.08);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid rgba(57,210,192,0.2);
+    white-space: nowrap;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+
+  .pkg-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ===== Layer Stack ===== */
+  .layer-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
+  }
+
+  .layer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    position: relative;
+  }
+
+  .layer-label {
+    font-weight: 600;
+    min-width: 56px;
+    color: var(--text-primary);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+
+  .layer-detail {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+  }
+
+  .layer.ui      { background: rgba(88,166,255,0.06); border-left: 2px solid var(--blue); }
+  .layer.logic   { background: rgba(188,140,255,0.06); border-left: 2px solid var(--purple); }
+  .layer.service { background: rgba(63,185,80,0.06); border-left: 2px solid var(--green); }
+
+  .layer-arrow {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    line-height: 1;
+  }
+
+  /* ===== File List ===== */
+  .file-list {
+    list-style: none;
+    margin-top: 0.5rem;
+  }
+
+  .file-list li {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    padding: 0.2rem 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+
+  .file-list li::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 0.4rem;
+  }
+
+  .file-list.orange li::before { background: var(--orange); }
+  .file-list.blue li::before   { background: var(--blue); }
+  .file-list.green li::before  { background: var(--green); }
+  .file-list.purple li::before { background: var(--purple); }
+  .file-list.gray li::before   { background: var(--gray); }
+
+  .file-list code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.72rem;
+    background: var(--bg-tertiary);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+  }
+
+  /* ===== Connection Row ===== */
+  .connection-row {
+    background: var(--bg-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.25rem 0;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .conn-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+  }
+
+  .conn-arrow .arrow-label {
+    padding: 0.15rem 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    border: 1px solid var(--border-default);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* ===== Flow Section ===== */
+  .flow-section {
+    margin-top: 2.5rem;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+
+  .flow-section h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--text-primary);
+  }
+
+  .flow-diagram {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    padding: 1rem 0;
+  }
+
+  .flow-diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* ===== Import Rules Section ===== */
+  .import-rules {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .import-card {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .import-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .import-card.allowed h3 { color: var(--green); }
+  .import-card.forbidden h3 { color: var(--red); }
+
+  .import-card.allowed { border-color: var(--green-border); }
+  .import-card.forbidden { border-color: var(--red-border); }
+
+  .import-list {
+    list-style: none;
+  }
+
+  .import-list li {
+    font-size: 0.82rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 5px;
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    transition: background 0.2s;
+  }
+
+  .import-list li:hover {
+    background: var(--bg-tertiary);
+  }
+
+  .import-card.allowed .import-list li::before {
+    content: '\2713';
+    color: var(--green);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .import-card.forbidden .import-list li::before {
+    content: '\2717';
+    color: var(--red);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .import-card.allowed .import-list li {
+    color: var(--text-secondary);
+  }
+
+  .import-card.forbidden .import-list li {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--red);
+    text-decoration-thickness: 1px;
+  }
+
+  /* ===== Layer Detail Section ===== */
+  .layer-detail-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+  }
+
+  .layer-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .layer-detail-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 1fr 1fr;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-muted);
+    align-items: center;
+    font-size: 0.82rem;
+    transition: background 0.2s;
+  }
+
+  .layer-detail-row:hover { background: var(--bg-tertiary); }
+  .layer-detail-row:last-child { border-bottom: none; }
+
+  .layer-detail-row.header {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .layer-detail-row.header:hover { background: transparent; }
+
+  .layer-name {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .layer-name .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .layer-name .dot.blue { background: var(--blue); }
+  .layer-name .dot.purple { background: var(--purple); }
+  .layer-name .dot.green { background: var(--green); }
+
+  .layer-detail-row .contains,
+  .layer-detail-row .forbidden-items {
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+  }
+
+  .layer-detail-row .forbidden-items {
+    color: var(--text-muted);
+  }
+
+  /* ===== Alias Table ===== */
+  .alias-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+  }
+
+  .alias-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  .alias-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-default);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .alias-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border-muted);
+    color: var(--text-secondary);
+  }
+
+  .alias-table tr:last-child td { border-bottom: none; }
+
+  .alias-table tr {
+    transition: background 0.2s;
+  }
+
+  .alias-table tbody tr:hover { background: var(--bg-tertiary); }
+
+  .alias-table .alias-name {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    color: var(--accent-cyan);
+    font-weight: 500;
+  }
+
+  .alias-table .alias-path {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    color: var(--text-muted);
+  }
+
+  /* ===== Feature Package Structure ===== */
+  .structure-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+  }
+
+  .file-tree {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+  }
+
+  .file-tree .dir { color: var(--blue); font-weight: 600; }
+  .file-tree .file { color: var(--text-secondary); }
+  .file-tree .comment { color: var(--text-muted); font-style: italic; }
+  .file-tree .highlight-blue { color: var(--blue); }
+  .file-tree .highlight-purple { color: var(--purple); }
+  .file-tree .highlight-green { color: var(--green); }
+  .file-tree .highlight-orange { color: var(--orange); }
+
+  /* ===== Directory Template ===== */
+  .template-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+  }
+
+  .dir-tree {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.78rem;
+    line-height: 1.85;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* ===== Architecture Rules Cards ===== */
+  .rules-section {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .rule-card {
+    padding: 1.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .rule-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+
+  .rule-card h3 {
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .rule-card p {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .rule-card p code {
+    font-size: 0.72rem;
+    background: var(--bg-tertiary);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+  }
+
+  .rule-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .rule-num.orange  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+  .rule-num.blue    { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .rule-num.green   { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .rule-num.purple  { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+
+  /* ===== Checklist ===== */
+  .checklist-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+  }
+
+  .checklist {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .checklist li {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    transition: background 0.2s;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .checklist li:hover { background: var(--bg-tertiary); }
+
+  .checklist li .check-box {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border-default);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 0.65rem;
+    color: transparent;
+  }
+
+  .checklist li.checked .check-box {
+    background: var(--green-bg);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .checklist li.checked {
+    color: var(--text-muted);
+  }
+
+  /* ===== Good Fit / Overkill ===== */
+  .fit-section {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .fit-card {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+  }
+
+  .fit-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fit-card.good h3 { color: var(--green); }
+  .fit-card.overkill h3 { color: var(--text-muted); }
+
+  .fit-card.good { border-color: var(--green-border); }
+
+  .fit-list {
+    list-style: none;
+  }
+
+  .fit-list li {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    padding: 0.35rem 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .fit-list li::before {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+  }
+
+  .fit-card.good .fit-list li::before { content: '\2713'; color: var(--green); }
+  .fit-card.overkill .fit-list li::before { content: '\2717'; color: var(--text-muted); }
+
+  /* ===== Package JSON Template ===== */
+  .json-template {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+  }
+
+  .json-block {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.78rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .json-block .key { color: var(--blue); }
+  .json-block .string { color: var(--green); }
+  .json-block .bool { color: var(--orange); }
+  .json-block .comment { color: var(--text-muted); font-style: italic; }
+
+  /* ===== Highlight States ===== */
+  .domain.highlight-orange { box-shadow: inset 0 0 0 2px var(--orange); }
+  .domain.highlight-blue   { box-shadow: inset 0 0 0 2px var(--blue); }
+  .domain.highlight-green  { box-shadow: inset 0 0 0 2px var(--green); }
+  .domain.highlight-purple { box-shadow: inset 0 0 0 2px var(--purple); }
+  .domain.highlight-gray   { box-shadow: inset 0 0 0 2px var(--gray); }
+  .domain.dim { opacity: 0.15; transition: opacity 0.3s; }
+
+  /* ===== Footer ===== */
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-default);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .footer a {
+    color: var(--purple);
+    text-decoration: none;
+  }
+
+  .footer a:hover { text-decoration: underline; }
+
+  /* ===== Animations ===== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes prismGlow {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(188,140,255,0.3)); }
+    50% { filter: drop-shadow(0 0 16px rgba(188,140,255,0.5)); }
+  }
+
+  .prism-visual svg { animation: prismGlow 4s ease-in-out infinite; }
+
+  .domain { animation: fadeInUp 0.5s ease both; }
+  .diagram .row:nth-child(1) .domain { animation-delay: 0.05s; }
+  .diagram .row:nth-child(2) .domain { animation-delay: 0.15s; }
+  .diagram .row:nth-child(3) .domain { animation-delay: 0.2s; }
+  .diagram .row:nth-child(4) .domain:nth-child(1) { animation-delay: 0.25s; }
+  .diagram .row:nth-child(4) .domain:nth-child(2) { animation-delay: 0.3s; }
+
+  .flow-section        { animation: fadeInUp 0.5s ease 0.35s both; }
+  .import-rules > *    { animation: fadeInUp 0.5s ease both; }
+  .import-rules > *:nth-child(1) { animation-delay: 0.4s; }
+  .import-rules > *:nth-child(2) { animation-delay: 0.45s; }
+  .layer-detail-section { animation: fadeInUp 0.5s ease 0.5s both; }
+  .alias-section       { animation: fadeInUp 0.5s ease 0.55s both; }
+  .structure-section   { animation: fadeInUp 0.5s ease 0.6s both; }
+  .template-section    { animation: fadeInUp 0.5s ease 0.65s both; }
+  .rules-section > *   { animation: fadeInUp 0.5s ease both; }
+  .rules-section > *:nth-child(1) { animation-delay: 0.7s; }
+  .rules-section > *:nth-child(2) { animation-delay: 0.73s; }
+  .rules-section > *:nth-child(3) { animation-delay: 0.76s; }
+  .rules-section > *:nth-child(4) { animation-delay: 0.79s; }
+  .rules-section > *:nth-child(5) { animation-delay: 0.82s; }
+  .fit-section > *     { animation: fadeInUp 0.5s ease both; }
+  .fit-section > *:nth-child(1) { animation-delay: 0.85s; }
+  .fit-section > *:nth-child(2) { animation-delay: 0.88s; }
+  .json-template       { animation: fadeInUp 0.5s ease 0.9s both; }
+  .checklist-section   { animation: fadeInUp 0.5s ease 0.95s both; }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 900px) {
+    .packages.two-col,
+    .packages.three-col { grid-template-columns: 1fr; }
+    .row-bottom { grid-template-columns: 1fr; }
+    .rules-section { grid-template-columns: 1fr; }
+    .import-rules { grid-template-columns: 1fr; }
+    .fit-section { grid-template-columns: 1fr; }
+    .layer-detail-row { grid-template-columns: 80px 1fr; gap: 0.5rem; }
+    .layer-detail-row .forbidden-items,
+    .layer-detail-row.header .forbidden-items { display: none; }
+    header h1 { font-size: 1.6rem; }
+    .container { padding: 1.25rem 1rem 3rem; }
+    .domain { padding: 1.25rem 1rem; }
+    .prism-visual { width: 260px; height: 120px; }
+  }
+
+  @media (max-width: 500px) {
+    html { font-size: 14px; }
+    .legend { gap: 0.5rem; }
+    .legend-item { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+    .checklist { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ==================== HEADER ==================== -->
+  <header>
+    <div class="prism-hero">
+      <div class="prism-visual">
+        <svg viewBox="0 0 340 160" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="whiteLight" x1="0" y1="0.5" x2="0.3" y2="0.5">
+              <stop offset="0%" stop-color="#e6edf3" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#e6edf3" stop-opacity="0.4"/>
+            </linearGradient>
+            <linearGradient id="prismFill" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="rgba(188,140,255,0.15)"/>
+              <stop offset="100%" stop-color="rgba(88,166,255,0.08)"/>
+            </linearGradient>
+            <filter id="glowSoft">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Incoming white light beam -->
+          <line x1="10" y1="80" x2="120" y2="80" stroke="url(#whiteLight)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="10" y1="80" x2="120" y2="80" stroke="#e6edf3" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+
+          <!-- Prism triangle -->
+          <polygon points="120,30 120,130 195,80" fill="url(#prismFill)" stroke="#bc8cff" stroke-width="1.5" filter="url(#glowSoft)"/>
+          <text x="148" y="84" text-anchor="middle" fill="#bc8cff" font-size="11" font-weight="700" font-family="-apple-system, sans-serif" opacity="0.9">PRISM</text>
+
+          <!-- Spectrum bands emerging -->
+          <line x1="195" y1="65" x2="330" y2="20" stroke="#f0883e" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+          <text x="322" y="15" fill="#f0883e" font-size="9" font-weight="600" font-family="-apple-system, sans-serif" text-anchor="end">app/</text>
+
+          <line x1="195" y1="72" x2="330" y2="50" stroke="#58a6ff" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+          <text x="322" y="45" fill="#58a6ff" font-size="9" font-weight="600" font-family="-apple-system, sans-serif" text-anchor="end">front/</text>
+
+          <line x1="195" y1="80" x2="330" y2="80" stroke="#bc8cff" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+          <text x="322" y="75" fill="#bc8cff" font-size="9" font-weight="600" font-family="-apple-system, sans-serif" text-anchor="end">shared/</text>
+
+          <line x1="195" y1="88" x2="330" y2="110" stroke="#3fb950" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+          <text x="322" y="105" fill="#3fb950" font-size="9" font-weight="600" font-family="-apple-system, sans-serif" text-anchor="end">back/</text>
+
+          <line x1="195" y1="95" x2="330" y2="140" stroke="#8b949e" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+          <text x="322" y="135" fill="#8b949e" font-size="9" font-weight="600" font-family="-apple-system, sans-serif" text-anchor="end">styles/</text>
+
+          <!-- Label: "monolith" on left -->
+          <text x="60" y="100" fill="#6e7681" font-size="8" font-family="-apple-system, sans-serif" text-anchor="middle">monolith</text>
+
+          <!-- Label: "domain bands" on right -->
+          <text x="280" y="155" fill="#6e7681" font-size="8" font-family="-apple-system, sans-serif" text-anchor="middle">domain bands</text>
+        </svg>
+      </div>
+
+      <div>
+        <h1>Prism Architecture</h1>
+        <p class="tagline">
+          <em>"A prism separates white light into a clean spectrum."</em><br>
+          Split a fullstack app into <code>front/</code> <code>back/</code> <code>shared/</code> domains. Each frontend feature gets its own <code>ui/logic/service</code> package.
+        </p>
+        <span class="badge">Universal Reference</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== LEGEND ==================== -->
+  <div class="legend" id="legend">
+    <div class="legend-item" data-domain="orange" onclick="toggleHighlight('orange')">
+      <span class="legend-dot orange"></span>
+      <span>app/ &mdash; Routing Shell</span>
+    </div>
+    <div class="legend-item" data-domain="blue" onclick="toggleHighlight('blue')">
+      <span class="legend-dot blue"></span>
+      <span>front/ &mdash; Frontend Domain</span>
+    </div>
+    <div class="legend-item" data-domain="green" onclick="toggleHighlight('green')">
+      <span class="legend-dot green"></span>
+      <span>back/ &mdash; Backend Domain</span>
+    </div>
+    <div class="legend-item" data-domain="purple" onclick="toggleHighlight('purple')">
+      <span class="legend-dot purple"></span>
+      <span>shared/ &mdash; API Contracts</span>
+    </div>
+    <div class="legend-item" data-domain="gray" onclick="toggleHighlight('gray')">
+      <span class="legend-dot gray"></span>
+      <span>styles/ &mdash; Global Styles</span>
+    </div>
+  </div>
+  <p class="legend-hint">Click a domain to highlight &middot; <kbd>Esc</kbd> to clear &middot; Double-click legend to collapse/expand all</p>
+
+  <!-- ==================== MAIN DIAGRAM ==================== -->
+  <div class="diagram" id="diagram">
+
+    <!-- Row 1: App (Routing Shell) -->
+    <div class="row row-top">
+      <div class="domain" data-domain="orange">
+        <div class="domain-header" onclick="toggleCollapse(this)">
+          <div class="domain-icon orange">A</div>
+          <span class="domain-title">src/app/</span>
+          <span class="domain-badge framework">Framework-specific</span>
+          <span class="domain-subtitle">Thin wrappers only. No business logic.</span>
+          <span class="collapse-indicator">&#9660;</span>
+        </div>
+        <div class="domain-body">
+          <div class="packages two-col">
+            <div class="pkg">
+              <div class="pkg-name">Pages (Thin Wrappers)</div>
+              <div class="pkg-desc">Each page just imports one component from <code>front/packages/</code>.</div>
+              <ul class="file-list orange">
+                <li><code>layout.tsx</code> &mdash; root layout</li>
+                <li><code>page.tsx</code> &mdash; root page</li>
+                <li><code>{feature-a}/page.tsx</code> &rarr; imports <strong>FeatureAPage</strong></li>
+                <li><code>{feature-b}/page.tsx</code> &rarr; imports <strong>FeatureBPage</strong></li>
+              </ul>
+            </div>
+            <div class="pkg">
+              <div class="pkg-name">API Routes</div>
+              <div class="pkg-desc">Routes call into <code>back/</code>. The route file itself does nothing.</div>
+              <ul class="file-list orange">
+                <li><code>api/{feature-a}/route.ts</code> &rarr; delegates to <code>back/</code></li>
+                <li><code>api/{feature-b}/route.ts</code> &rarr; delegates to <code>back/</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connection: app -> front / app -> back -->
+    <div class="connection-row">
+      <div class="conn-arrow">
+        <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><path d="M6 0v10M1 7l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="arrow-label">pages import from front/packages/</span>
+      </div>
+      <div class="conn-arrow">
+        <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><path d="M6 0v10M1 7l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="arrow-label">api/ delegates to back/</span>
+      </div>
+    </div>
+
+    <!-- Row 2: Front (Feature Packages) -->
+    <div class="row row-middle">
+      <div class="domain" data-domain="blue">
+        <div class="domain-header" onclick="toggleCollapse(this)">
+          <div class="domain-icon blue">F</div>
+          <span class="domain-title">src/front/packages/</span>
+          <span class="domain-subtitle">One package per feature</span>
+          <span class="collapse-indicator">&#9660;</span>
+        </div>
+        <div class="domain-body">
+          <div class="packages three-col">
+
+            <!-- feature-a -->
+            <div class="pkg">
+              <div class="pkg-name">
+                {feature-a}/
+                <span class="alias">@feature-a</span>
+              </div>
+              <div class="pkg-desc">Has its own package.json. Layers: ui/logic/service.</div>
+              <div class="layer-stack">
+                <div class="layer ui">
+                  <span class="layer-label">ui/</span>
+                  <span class="layer-detail">FeatureAPage, components, styles</span>
+                </div>
+                <div class="layer-arrow">&darr;</div>
+                <div class="layer logic">
+                  <span class="layer-label">logic/</span>
+                  <span class="layer-detail">hooks, state, business rules</span>
+                </div>
+                <div class="layer-arrow">&darr;</div>
+                <div class="layer service">
+                  <span class="layer-label">service/</span>
+                  <span class="layer-detail">featureAApi &rarr; /api/feature-a</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- feature-b -->
+            <div class="pkg">
+              <div class="pkg-name">
+                {feature-b}/
+                <span class="alias">@feature-b</span>
+              </div>
+              <div class="pkg-desc">Has its own package.json. Layers: ui/logic/service.</div>
+              <div class="layer-stack">
+                <div class="layer ui">
+                  <span class="layer-label">ui/</span>
+                  <span class="layer-detail">FeatureBPage, components, styles</span>
+                </div>
+                <div class="layer-arrow">&darr;</div>
+                <div class="layer logic">
+                  <span class="layer-label">logic/</span>
+                  <span class="layer-detail">hooks, state, business rules</span>
+                </div>
+                <div class="layer-arrow">&darr;</div>
+                <div class="layer service">
+                  <span class="layer-label">service/</span>
+                  <span class="layer-detail">featureBApi &rarr; /api/feature-b</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- service-core -->
+            <div class="pkg">
+              <div class="pkg-name">
+                service-core/
+                <span class="alias">@service-core</span>
+              </div>
+              <div class="pkg-desc">All feature packages use this for HTTP calls</div>
+              <ul class="file-list blue">
+                <li><code>apiClient</code> &mdash; fetch wrapper (GET, POST)</li>
+                <li><code>ApiError</code> &mdash; typed error with status code</li>
+                <li><code>ApiResult&lt;T&gt;</code> &mdash; ok/error union type</li>
+                <li><code>errorMapper</code> &mdash; status code to user message</li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connection: front -> shared <- back -->
+    <div class="connection-row">
+      <div class="conn-arrow">
+        <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><path d="M6 0v10M1 7l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="arrow-label">front/ imports shared/types (API contracts)</span>
+      </div>
+      <div class="conn-arrow">
+        <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><path d="M6 0v10M1 7l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="arrow-label">back/ imports shared/types (API contracts)</span>
+      </div>
+    </div>
+
+    <!-- Row 3: Shared + Styles -->
+    <div class="row row-bottom">
+      <!-- Shared Types (THE BRIDGE) -->
+      <div class="domain" data-domain="purple">
+        <div class="domain-header" onclick="toggleCollapse(this)">
+          <div class="domain-icon purple">S</div>
+          <span class="domain-title">src/shared/types/</span>
+          <span class="domain-subtitle">THE BRIDGE &mdash; the only place front/ and back/ share types</span>
+          <span class="collapse-indicator">&#9660;</span>
+        </div>
+        <div class="domain-body">
+          <div class="packages two-col">
+            <div class="pkg">
+              <div class="pkg-name">
+                {feature-a}-api.ts
+                <span class="alias">@shared/types</span>
+              </div>
+              <div class="pkg-desc">What the API sends and receives</div>
+              <ul class="file-list purple">
+                <li><code>FeatureARequest</code></li>
+                <li><code>FeatureAResponse</code></li>
+                <li><code>FeatureAItem</code></li>
+              </ul>
+            </div>
+            <div class="pkg">
+              <div class="pkg-name">{feature-b}-api.ts</div>
+              <div class="pkg-desc">Same pattern, different feature</div>
+              <ul class="file-list purple">
+                <li><code>FeatureBRequest</code></li>
+                <li><code>FeatureBResponse</code></li>
+                <li><code>FeatureBItem</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Styles -->
+      <div class="domain" data-domain="gray">
+        <div class="domain-header" onclick="toggleCollapse(this)">
+          <div class="domain-icon gray">Y</div>
+          <span class="domain-title">src/styles/</span>
+          <span class="domain-subtitle">App-level Global Styles</span>
+          <span class="collapse-indicator">&#9660;</span>
+        </div>
+        <div class="domain-body">
+          <div class="packages">
+            <div class="pkg">
+              <div class="pkg-name">globals.scss</div>
+              <div class="pkg-desc">CSS variables, resets. Root layout imports this.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: Backend -->
+    <div class="row row-top">
+      <div class="domain" data-domain="green">
+        <div class="domain-header" onclick="toggleCollapse(this)">
+          <div class="domain-icon green">B</div>
+          <span class="domain-title">src/back/</span>
+          <span class="domain-subtitle">DB, business logic, validation</span>
+          <span class="collapse-indicator">&#9660;</span>
+        </div>
+        <div class="domain-body">
+          <div class="packages three-col">
+            <div class="pkg">
+              <div class="pkg-name">
+                db.ts
+                <span class="alias">@back/db</span>
+              </div>
+              <div class="pkg-desc">DB client singleton</div>
+            </div>
+            <div class="pkg">
+              <div class="pkg-name">
+                schemas.ts
+                <span class="alias">@back/schemas</span>
+              </div>
+              <div class="pkg-desc">Zod schemas for API request validation</div>
+            </div>
+            <div class="pkg">
+              <div class="pkg-name">
+                types/
+                <span class="alias">@back/types</span>
+              </div>
+              <div class="pkg-desc">Backend-only types. front/ cannot import these.</div>
+              <ul class="file-list green">
+                <li><code>index.ts</code> &mdash; barrel export</li>
+                <li><code>{domain}.ts</code> &mdash; domain-specific types</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== DEPENDENCY FLOW SVG ==================== -->
+  <div class="flow-section">
+    <h2>High-Level Dependency Flow</h2>
+    <div class="flow-diagram">
+      <svg viewBox="0 0 860 370" width="860" height="370" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrOrange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#f0883e"/>
+          </marker>
+          <marker id="arrBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#58a6ff"/>
+          </marker>
+          <marker id="arrGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#3fb950"/>
+          </marker>
+          <marker id="arrPurple" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#bc8cff"/>
+          </marker>
+          <marker id="arrRed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#f85149"/>
+          </marker>
+          <filter id="svgGlow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- ===== App Routing Shell ===== -->
+        <rect x="310" y="15" width="240" height="50" rx="8"
+              fill="rgba(240,136,62,0.1)" stroke="#f0883e" stroke-width="1.5"/>
+        <text x="430" y="45" text-anchor="middle" fill="#f0883e" font-size="14" font-weight="600" font-family="-apple-system, sans-serif">
+          app/ (Routing Shell)
+        </text>
+
+        <!-- ===== Arrow: app -> front (pages) ===== -->
+        <path d="M360 65 L220 115" stroke="#f0883e" stroke-width="1.5" fill="none"
+              marker-end="url(#arrOrange)" stroke-dasharray="5,3" opacity="0.75"/>
+        <text x="270" y="88" fill="#f0883e" font-size="9.5" font-family="monospace" opacity="0.85" transform="rotate(-21 270 88)">pages</text>
+
+        <!-- ===== Arrow: app -> back (api/) ===== -->
+        <path d="M500 65 L640 115" stroke="#f0883e" stroke-width="1.5" fill="none"
+              marker-end="url(#arrOrange)" stroke-dasharray="5,3" opacity="0.75"/>
+        <text x="560" y="88" fill="#f0883e" font-size="9.5" font-family="monospace" opacity="0.85" transform="rotate(21 560 88)">api/</text>
+
+        <!-- ===== Front Domain ===== -->
+        <rect x="60" y="120" width="300" height="60" rx="8"
+              fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1.5"/>
+        <text x="210" y="146" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="600" font-family="-apple-system, sans-serif">
+          front/packages/
+        </text>
+        <text x="210" y="166" text-anchor="middle" fill="#58a6ff" font-size="10" font-family="monospace" opacity="0.7">
+          {feature-a} | {feature-b} | service-core
+        </text>
+
+        <!-- ===== Back Domain ===== -->
+        <rect x="500" y="120" width="300" height="60" rx="8"
+              fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="650" y="146" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="600" font-family="-apple-system, sans-serif">
+          back/
+        </text>
+        <text x="650" y="166" text-anchor="middle" fill="#3fb950" font-size="10" font-family="monospace" opacity="0.7">
+          db | schemas | business logic | types/
+        </text>
+
+        <!-- ===== Forbidden cross-arrow: front <-> back ===== -->
+        <line x1="362" y1="150" x2="498" y2="150" stroke="#f85149" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.5"/>
+        <text x="430" y="145" text-anchor="middle" fill="#f85149" font-size="18" font-weight="700" opacity="0.7">&times;</text>
+        <text x="430" y="165" text-anchor="middle" fill="#f85149" font-size="8" font-family="monospace" opacity="0.6">NEVER</text>
+
+        <!-- ===== Arrow: front -> shared ===== -->
+        <path d="M210 180 L350 250" stroke="#58a6ff" stroke-width="1.8" fill="none"
+              marker-end="url(#arrBlue)" opacity="0.8"/>
+        <text x="262" y="225" fill="#58a6ff" font-size="9.5" font-family="monospace" opacity="0.75" transform="rotate(27 262 225)">imports types</text>
+
+        <!-- ===== Arrow: back -> shared ===== -->
+        <path d="M650 180 L510 250" stroke="#3fb950" stroke-width="1.8" fill="none"
+              marker-end="url(#arrGreen)" opacity="0.8"/>
+        <text x="590" y="225" fill="#3fb950" font-size="9.5" font-family="monospace" opacity="0.75" transform="rotate(-27 590 225)">imports types</text>
+
+        <!-- ===== Shared Types (the bridge) ===== -->
+        <rect x="270" y="255" width="320" height="55" rx="8"
+              fill="rgba(188,140,255,0.1)" stroke="#bc8cff" stroke-width="1.5" filter="url(#svgGlow)"/>
+        <text x="430" y="278" text-anchor="middle" fill="#bc8cff" font-size="13" font-weight="600" font-family="-apple-system, sans-serif">
+          shared/types/
+        </text>
+        <text x="430" y="298" text-anchor="middle" fill="#bc8cff" font-size="10" font-family="monospace" opacity="0.7">
+          {feature-a}-api.ts | {feature-b}-api.ts
+        </text>
+
+        <!-- ===== Bridge label ===== -->
+        <rect x="372" y="226" width="116" height="20" rx="4" fill="#161b22" stroke="#bc8cff" stroke-width="1" opacity="0.85"/>
+        <text x="430" y="240" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700" font-family="monospace" opacity="0.95">
+          THE BRIDGE
+        </text>
+
+        <!-- ===== Styles (small, bottom-left) ===== -->
+        <rect x="10" y="270" width="150" height="38" rx="6"
+              fill="rgba(139,148,158,0.06)" stroke="#8b949e" stroke-width="1" opacity="0.6"/>
+        <text x="85" y="294" text-anchor="middle" fill="#8b949e" font-size="10.5" font-weight="500" font-family="-apple-system, sans-serif" opacity="0.7">
+          styles/ (globals)
+        </text>
+
+        <!-- Dashed arrow: app -> styles -->
+        <path d="M340 63 Q50 90 85 268" stroke="#8b949e" stroke-width="1" fill="none"
+              stroke-dasharray="3,3" opacity="0.35"/>
+
+        <!-- ===== Feature Package Layers (annotation) ===== -->
+        <rect x="690" y="250" width="160" height="110" rx="6"
+              fill="rgba(88,166,255,0.04)" stroke="#30363d" stroke-width="1"/>
+        <text x="770" y="268" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="700" font-family="-apple-system, sans-serif" letter-spacing="0.05em">
+          FEATURE PKG LAYERS
+        </text>
+
+        <rect x="710" y="278" width="120" height="20" rx="3"
+              fill="rgba(88,166,255,0.1)" stroke="#58a6ff" stroke-width="0.8"/>
+        <text x="770" y="293" text-anchor="middle" fill="#58a6ff" font-size="11" font-family="monospace" font-weight="600">ui/</text>
+
+        <text x="770" y="308" text-anchor="middle" fill="#6e7681" font-size="10">&darr;</text>
+
+        <rect x="710" y="312" width="120" height="20" rx="3"
+              fill="rgba(188,140,255,0.1)" stroke="#bc8cff" stroke-width="0.8"/>
+        <text x="770" y="327" text-anchor="middle" fill="#bc8cff" font-size="11" font-family="monospace" font-weight="600">logic/</text>
+
+        <text x="770" y="342" text-anchor="middle" fill="#6e7681" font-size="10">&darr;</text>
+
+        <rect x="710" y="345" width="120" height="20" rx="3"
+              fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="0.8"/>
+        <text x="770" y="360" text-anchor="middle" fill="#3fb950" font-size="11" font-family="monospace" font-weight="600">service/</text>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- ==================== IMPORT RULES ==================== -->
+  <div class="import-rules">
+    <div class="import-card allowed">
+      <h3>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#3fb950" stroke-width="1.5"/><path d="M6 10l3 3 5-6" stroke="#3fb950" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Allowed Imports
+      </h3>
+      <ul class="import-list">
+        <li>app/pages &rarr; front/packages</li>
+        <li>app/api &rarr; back/</li>
+        <li>front/ &rarr; shared/types</li>
+        <li>back/ &rarr; shared/types</li>
+        <li>feature pkg &rarr; service-core</li>
+        <li>ui &rarr; logic &rarr; service</li>
+      </ul>
+    </div>
+    <div class="import-card forbidden">
+      <h3>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f85149" stroke-width="1.5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#f85149" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Forbidden Imports
+      </h3>
+      <ul class="import-list">
+        <li>front/ &rarr; back/</li>
+        <li>back/ &rarr; front/</li>
+        <li>service &rarr; ui</li>
+        <li>app/ &rarr; back/types (internal)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== LAYER DETAIL TABLE ==================== -->
+  <div class="layer-detail-section">
+    <div class="section-title">
+      <span class="title-icon" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);">L</span>
+      Feature Package Layer Responsibilities
+      <span class="title-line"></span>
+    </div>
+    <div class="layer-detail-grid">
+      <div class="layer-detail-row header">
+        <div>Layer</div>
+        <div>Role</div>
+        <div>Contains</div>
+        <div class="forbidden-items">Forbidden</div>
+      </div>
+      <div class="layer-detail-row">
+        <div class="layer-name"><span class="dot blue"></span> ui/</div>
+        <div class="contains">Rendering, user interaction</div>
+        <div class="contains">React components, styles, event handlers</div>
+        <div class="forbidden-items">fetch, DB, business rules</div>
+      </div>
+      <div class="layer-detail-row">
+        <div class="layer-name"><span class="dot purple"></span> logic/</div>
+        <div class="contains">State management, business rules</div>
+        <div class="contains">hooks, validators, transformers</div>
+        <div class="forbidden-items">React JSX, fetch calls</div>
+      </div>
+      <div class="layer-detail-row">
+        <div class="layer-name"><span class="dot green"></span> service/</div>
+        <div class="contains">External communication</div>
+        <div class="contains">API call functions (via service-core)</div>
+        <div class="forbidden-items">React, DOM, state</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PATH ALIASES ==================== -->
+  <div class="alias-section">
+    <div class="section-title">
+      <span class="title-icon" style="background:rgba(57,210,192,0.08);color:var(--accent-cyan);border:1px solid rgba(57,210,192,0.25);">@</span>
+      Path Alias Convention (tsconfig.json)
+      <span class="title-line"></span>
+    </div>
+    <table class="alias-table">
+      <thead>
+        <tr>
+          <th>Alias Pattern</th>
+          <th>Maps To</th>
+          <th>Domain</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="alias-name">@{feature}</td>
+          <td class="alias-path">src/front/packages/{feature}</td>
+          <td style="color:var(--blue)">Frontend</td>
+        </tr>
+        <tr>
+          <td class="alias-name">@{feature}/*</td>
+          <td class="alias-path">src/front/packages/{feature}/*</td>
+          <td style="color:var(--blue)">Frontend</td>
+        </tr>
+        <tr>
+          <td class="alias-name">@service-core</td>
+          <td class="alias-path">src/front/packages/service-core</td>
+          <td style="color:var(--blue)">Frontend</td>
+        </tr>
+        <tr>
+          <td class="alias-name">@back/*</td>
+          <td class="alias-path">src/back/*</td>
+          <td style="color:var(--green)">Backend</td>
+        </tr>
+        <tr>
+          <td class="alias-name">@shared/*</td>
+          <td class="alias-path">src/shared/*</td>
+          <td style="color:var(--purple)">Shared</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== FEATURE PACKAGE STRUCTURE ==================== -->
+  <div class="structure-section">
+    <div class="section-title">
+      <span class="title-icon" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);">P</span>
+      Feature Package Structure
+      <span class="title-line"></span>
+    </div>
+    <div class="file-tree"><span class="dir">{feature}/</span>
+<span class="file">&boxvr;&boxh;&boxh; package.json</span>     <span class="comment"># @{project}/{feature}, private: true</span>
+<span class="file">&boxvr;&boxh;&boxh; index.ts</span>         <span class="comment"># barrel export</span>
+<span class="file">&boxur;&boxh;&boxh; src/</span>
+    <span class="file">&boxvr;&boxh;&boxh; types.ts</span>
+    <span class="file">&boxvr;&boxh;&boxh;</span> <span class="highlight-blue">ui/</span>
+    <span class="file">&boxdr;   &boxvr;&boxh;&boxh; FeaturePage.tsx</span>
+    <span class="file">&boxdr;   &boxvr;&boxh;&boxh; FeaturePage.module.scss</span>
+    <span class="file">&boxdr;   &boxur;&boxh;&boxh; index.ts</span>
+    <span class="file">&boxvr;&boxh;&boxh;</span> <span class="highlight-purple">logic/</span>
+    <span class="file">&boxdr;   &boxur;&boxh;&boxh; index.ts</span>       <span class="comment"># hooks, validators, transformers</span>
+    <span class="file">&boxur;&boxh;&boxh;</span> <span class="highlight-green">service/</span>
+        <span class="file">&boxvr;&boxh;&boxh; featureApi.ts</span>  <span class="comment"># API calls via service-core</span>
+        <span class="file">&boxur;&boxh;&boxh; index.ts</span></div>
+  </div>
+
+  <!-- ==================== GENERIC DIRECTORY TEMPLATE ==================== -->
+  <div class="template-section">
+    <div class="section-title">
+      <span class="title-icon" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);">D</span>
+      Generic Directory Template
+      <span class="title-line"></span>
+    </div>
+    <div class="dir-tree"><span style="color:var(--text-primary);font-weight:700">src/</span>
+<span style="color:var(--orange)">&boxvr;&boxh;&boxh; app/</span>                          <span style="color:var(--text-muted)"># Routing Shell (framework-specific)</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh; layout.tsx</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh; page.tsx</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh; {feature-a}/page.tsx</span>      <span style="color:var(--text-muted)"># thin wrapper</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh; {feature-b}/page.tsx</span>      <span style="color:var(--text-muted)"># thin wrapper</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxur;&boxh;&boxh; api/</span>
+<span style="color:var(--text-muted)">&boxdr;       &boxvr;&boxh;&boxh; {feature-a}/route.ts</span>
+<span style="color:var(--text-muted)">&boxdr;       &boxur;&boxh;&boxh; {feature-b}/route.ts</span>
+<span style="color:var(--text-muted)">&boxdr;</span>
+<span style="color:var(--blue)">&boxvr;&boxh;&boxh; front/packages/</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh;</span> <span style="color:var(--blue)">{feature-a}/</span>              <span style="color:var(--text-muted)"># Feature Package</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh;</span> <span style="color:var(--blue)">{feature-b}/</span>              <span style="color:var(--text-muted)"># Feature Package</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxur;&boxh;&boxh;</span> <span style="color:var(--blue)">service-core/</span>             <span style="color:var(--text-muted)"># Shared HTTP Client</span>
+<span style="color:var(--text-muted)">&boxdr;</span>
+<span style="color:var(--green)">&boxvr;&boxh;&boxh; back/</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh; db.ts</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh; schemas.ts</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxur;&boxh;&boxh; types/</span>
+<span style="color:var(--text-muted)">&boxdr;</span>
+<span style="color:var(--purple)">&boxvr;&boxh;&boxh; shared/types/</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxvr;&boxh;&boxh; {feature-a}-api.ts</span>
+<span style="color:var(--text-muted)">&boxdr;   &boxur;&boxh;&boxh; {feature-b}-api.ts</span>
+<span style="color:var(--text-muted)">&boxdr;</span>
+<span style="color:var(--gray)">&boxur;&boxh;&boxh; styles/</span>
+    <span style="color:var(--text-muted)">&boxur;&boxh;&boxh; globals.scss</span></div>
+  </div>
+
+  <!-- ==================== ARCHITECTURE RULES CARDS ==================== -->
+  <div class="rules-section">
+    <div class="rule-card">
+      <h3><span class="rule-num purple">1</span> Domain Triad</h3>
+      <p>
+        <code>front/</code>, <code>back/</code>, <code>shared/</code>. That's it.
+        <code>front/</code> and <code>back/</code> don't know each other exist. They only talk through <code>shared/types/</code>.
+      </p>
+    </div>
+    <div class="rule-card">
+      <h3><span class="rule-num purple">2</span> Shared Bridge</h3>
+      <p>
+        API request/response types go in <code>shared/types/</code>, nowhere else.
+        <strong>front &rarr; shared &larr; back</strong>. If you need a type on both sides, it belongs here.
+      </p>
+    </div>
+    <div class="rule-card">
+      <h3><span class="rule-num blue">3</span> Feature Package</h3>
+      <p>
+        Own <code>package.json</code>, own barrel <code>index.ts</code>.
+        Can use <code>service-core</code> and <code>shared/types</code>. Cannot reach into another feature's <code>src/</code>.
+      </p>
+    </div>
+    <div class="rule-card">
+      <h3><span class="rule-num blue">4</span> Layer Direction</h3>
+      <p>
+        <strong>ui/ &rarr; logic/ &rarr; service/</strong>. Top-down only.
+        If you find <code>service/</code> importing from <code>ui/</code>, something went wrong.
+      </p>
+    </div>
+    <div class="rule-card">
+      <h3><span class="rule-num orange">5</span> Thin Routing Shell</h3>
+      <p>
+        <code>app/</code> is framework glue (Next.js, Nuxt, SvelteKit).
+        Pages import from <code>front/</code>. API routes call <code>back/</code>. Nothing else goes here.
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== WHEN TO USE ==================== -->
+  <div class="fit-section">
+    <div class="fit-card good">
+      <h3>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#3fb950" stroke-width="1.5"/><path d="M6 10l3 3 5-6" stroke="#3fb950" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Good Fit
+      </h3>
+      <ul class="fit-list">
+        <li>Full-stack Next.js / Nuxt / SvelteKit apps</li>
+        <li>Projects with 2+ independent features</li>
+        <li>Clear front/back boundary needed</li>
+        <li>Team size 2+ or long-term maintenance</li>
+      </ul>
+    </div>
+    <div class="fit-card overkill">
+      <h3>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#8b949e" stroke-width="1.5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#8b949e" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Overkill
+      </h3>
+      <ul class="fit-list">
+        <li>Pure SPA with no API layer</li>
+        <li>Single CRUD page</li>
+        <li>Prototype / hackathon project</li>
+        <li>One-off scripts</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== PACKAGE.JSON TEMPLATE ==================== -->
+  <div class="json-template">
+    <div class="section-title">
+      <span class="title-icon" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);">J</span>
+      package.json Template (Feature Package)
+      <span class="title-line"></span>
+    </div>
+    <div class="json-block">{
+  <span class="key">"name"</span>: <span class="string">"@{project}/{feature}"</span>,
+  <span class="key">"private"</span>: <span class="bool">true</span>,
+  <span class="key">"exports"</span>: {
+    <span class="key">"."</span>: <span class="string">"./index.ts"</span>,
+    <span class="key">"./service"</span>: <span class="string">"./src/service/index.ts"</span>,
+    <span class="key">"./types"</span>: <span class="string">"./src/types.ts"</span>
+  }
+}</div>
+  </div>
+
+  <!-- ==================== NEW PROJECT CHECKLIST ==================== -->
+  <div class="checklist-section">
+    <div class="section-title">
+      <span class="title-icon" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);">&#10003;</span>
+      New Project Checklist
+      <span class="title-line"></span>
+    </div>
+    <ul class="checklist" id="checklist">
+      <li onclick="toggleCheck(this)">
+        <span class="check-box">&#10003;</span>
+        <span>Add path aliases to <code>tsconfig.json</code></span>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <span class="check-box">&#10003;</span>
+        <span>Create <code>src/front/packages/service-core/</code> (apiClient, types, errorMapper)</span>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <span class="check-box">&#10003;</span>
+        <span>Create <code>src/shared/types/</code> (API contract type definitions)</span>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <span class="check-box">&#10003;</span>
+        <span>Create <code>src/back/</code> (DB client, schemas, backend types)</span>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <span class="check-box">&#10003;</span>
+        <span>Create first feature package (<code>package.json</code> + <code>index.ts</code> + <code>src/ui,logic,service/</code>)</span>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <span class="check-box">&#10003;</span>
+        <span>Write <code>app/</code> pages as thin wrappers</span>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <span class="check-box">&#10003;</span>
+        <span>Verify: <code>tsc --noEmit</code> passes with zero errors</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <div class="footer">
+    <p>Prism Architecture</p>
+    <p style="margin-top:0.3rem">front / back / shared &mdash; that's the whole idea.</p>
+  </div>
+
+</div>
+
+<script>
+  // ===== Collapse / Expand =====
+  function toggleCollapse(headerEl) {
+    const domain = headerEl.closest('.domain');
+    domain.classList.toggle('collapsed');
+  }
+
+  // ===== Legend Highlight =====
+  let activeHighlight = null;
+
+  function toggleHighlight(color) {
+    const domains = document.querySelectorAll('.domain[data-domain]');
+    const legendItems = document.querySelectorAll('.legend-item');
+
+    if (activeHighlight === color) {
+      // Clear all highlights
+      domains.forEach(d => {
+        d.classList.remove('dim');
+        d.classList.remove('highlight-orange', 'highlight-blue', 'highlight-green', 'highlight-purple', 'highlight-gray');
+      });
+      legendItems.forEach(li => {
+        li.classList.remove('dimmed');
+        li.classList.remove('active');
+      });
+      activeHighlight = null;
+      return;
+    }
+
+    activeHighlight = color;
+
+    domains.forEach(d => {
+      const domainColor = d.getAttribute('data-domain');
+      if (domainColor === color) {
+        d.classList.remove('dim');
+        d.classList.add('highlight-' + color);
+      } else {
+        d.classList.add('dim');
+        d.classList.remove('highlight-orange', 'highlight-blue', 'highlight-green', 'highlight-purple', 'highlight-gray');
+      }
+    });
+
+    legendItems.forEach(li => {
+      if (li.getAttribute('data-domain') === color) {
+        li.classList.remove('dimmed');
+        li.classList.add('active');
+      } else {
+        li.classList.add('dimmed');
+        li.classList.remove('active');
+      }
+    });
+  }
+
+  // ===== Keyboard: Escape to clear highlights =====
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeHighlight) {
+      toggleHighlight(activeHighlight);
+    }
+  });
+
+  // ===== Double-click legend to collapse/expand all =====
+  document.getElementById('legend').addEventListener('dblclick', () => {
+    const domains = document.querySelectorAll('.domain');
+    const allCollapsed = Array.from(domains).every(d => d.classList.contains('collapsed'));
+    domains.forEach(d => {
+      if (allCollapsed) {
+        d.classList.remove('collapsed');
+      } else {
+        d.classList.add('collapsed');
+      }
+    });
+  });
+
+  // ===== Checklist toggle =====
+  function toggleCheck(li) {
+    li.classList.toggle('checked');
+  }
+</script>
+
+</body>
+</html>
